@@ -354,7 +354,7 @@ class ArtistAnalyzer:
 def main():
     """Main execution function"""
     # Initialize analyzer
-    analyzer = ArtistAnalyzer('../spotify_dataset.csv')
+    analyzer = ArtistAnalyzer('/mnt/user-data/uploads/claude.csv')
     
     # Run analysis
     artist_data = analyzer.analyze_artists()
@@ -374,7 +374,7 @@ def main():
             print(f"{key}: {value:,}")
     
     # Save results
-    analyzer.save_results(artist_data, 'artist_analysis.json')
+    analyzer.save_results(artist_data, '/mnt/user-data/outputs/artist_analysis.json')
     
     print("\n" + "="*80)
     print("ANALYSIS COMPLETE!")
