@@ -82,34 +82,99 @@ body {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Artists Grid - Complete this section */
-.artists-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+/* Artists Table */
+.artists-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  overflow-x: auto;
   margin-bottom: 2rem;
 }
 
-.artist-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
+.artists-table {
+  width: 100%;
+  min-width: 1000px;
+}
+
+.artists-table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr 1.2fr 1.2fr 1fr;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.artists-table-header .sortable {
   cursor: pointer;
-  border-left: 4px solid #ddd;
+  user-select: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.artist-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+.artists-table-header .sortable:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
 }
 
-/* Tier-based styling */
-.artist-card.tier-hit { border-left-color: #4CAF50; }
-.artist-card.tier-good { border-left-color: #8BC34A; }
-.artist-card.tier-mid { border-left-color: #FFC107; }
-.artist-card.tier-bust { border-left-color: #F44336; }
+.sort-indicator {
+  font-size: 0.9rem;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.sort-indicator.active {
+  opacity: 1;
+  font-weight: bold;
+}
+
+.artists-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr 1.2fr 1.2fr 1fr;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.artists-table-row:hover {
+  background: #f8f9fa;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transform: translateX(2px);
+}
+
+.artists-table-row:last-child {
+  border-bottom: none;
+}
+
+/* Tier-based styling for table rows */
+.artists-table-row.tier-hit { border-left-color: #4CAF50; }
+.artists-table-row.tier-good { border-left-color: #8BC34A; }
+.artists-table-row.tier-mid { border-left-color: #FFC107; }
+.artists-table-row.tier-bust { border-left-color: #F44336; }
+.artists-table-row.tier-unknown { border-left-color: #9E9E9E; }
+
+.artist-name-cell {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.genre-cell {
+  color: #667eea;
+  font-weight: 500;
+}
 
 .artist-header {
   display: flex;
@@ -232,6 +297,12 @@ body {
 .pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  padding: 0.75rem 0.5rem;
+  color: #666;
+  user-select: none;
 }
 
 .pagination-info {
@@ -368,6 +439,52 @@ body {
   position: relative;
 }
 
+/* Charts */
+.chart-subtitle {
+  color: #666;
+  font-size: 0.85rem;
+  margin: -0.5rem 0 1rem 0;
+  font-style: italic;
+}
+
+/* Revenue Breakdown */
+.revenue-breakdown {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.revenue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #667eea;
+}
+
+.revenue-label {
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.revenue-value {
+  color: #667eea;
+  font-weight: 600;
+}
+
 /* Error Styles */
 .error {
   text-align: center;
@@ -386,8 +503,18 @@ body {
     padding: 1rem;
   }
 
-  .artists-grid {
-    grid-template-columns: 1fr;
+  .artists-table-container {
+    border-radius: 8px;
+  }
+
+  .artists-table-header,
+  .artists-table-row {
+    font-size: 0.85rem;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .artists-table-header {
+    font-size: 0.75rem;
   }
 
   .detail-grid {

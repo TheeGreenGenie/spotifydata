@@ -48,6 +48,7 @@ const ArtistList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const navigate = useNavigate();
   const ITEMS_PER_PAGE = 25;
 
@@ -98,17 +99,86 @@ const ArtistList = () => {
     });
   }, [artistsData, predictionsData]);
 
-  // Filter artists based on search term
-  const filteredArtists = useMemo(() => {
-    return combinedArtists.filter(artist =>
+  // Sort function
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  // Filter and sort artists
+  const filteredAndSortedArtists = useMemo(() => {
+    let filtered = combinedArtists.filter(artist =>
       artist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (artist.primary_genre && artist.primary_genre.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  }, [combinedArtists, searchTerm]);
 
-  const totalPages = Math.ceil(filteredArtists.length / ITEMS_PER_PAGE);
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        let aValue, bValue;
+
+        switch (sortConfig.key) {
+          case 'name':
+            aValue = a.name.toLowerCase();
+            bValue = b.name.toLowerCase();
+            break;
+          case 'total_songs':
+            aValue = a.total_songs || 0;
+            bValue = b.total_songs || 0;
+            break;
+          case 'hit_rate':
+            aValue = a.hit_rate || 0;
+            bValue = b.hit_rate || 0;
+            break;
+          case 'revenue':
+            aValue = a.estimated_total_revenue || 0;
+            bValue = b.estimated_total_revenue || 0;
+            break;
+          case 'predicted_tier':
+            const tierOrder = { hit: 4, good: 3, mid: 2, bust: 1, 'N/A': 0 };
+            aValue = tierOrder[a.predictions.predicted_tier] || 0;
+            bValue = tierOrder[b.predictions.predicted_tier] || 0;
+            break;
+          case 'hit_probability':
+            aValue = a.predictions.hit_probability || 0;
+            bValue = b.predictions.hit_probability || 0;
+            break;
+          case 'hotness':
+            aValue = a.predictions.hotness_score || 0;
+            bValue = b.predictions.hotness_score || 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [combinedArtists, searchTerm, sortConfig]);
+
+  const totalPages = Math.ceil(filteredAndSortedArtists.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentArtists = filteredArtists.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const currentArtists = filteredAndSortedArtists.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Sort indicator component
+  const SortIndicator = ({ columnKey }) => {
+    if (sortConfig.key !== columnKey) {
+      return <span className="sort-indicator">⇅</span>;
+    }
+    return <span className="sort-indicator active">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
 
   const handleArtistClick = (artist) => {
     navigate(`/artist/${encodeURIComponent(artist.name)}`, { state: { artist } });
@@ -153,54 +223,61 @@ const ArtistList = () => {
       </div>
 
       <div className="pagination-info">
-        Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredArtists.length)} of {filteredArtists.length} artists
+        Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredAndSortedArtists.length)} of {filteredAndSortedArtists.length} artists
         (Total in database: {Object.keys(artistsData.artists || {}).length})
       </div>
 
-      <div className="artists-grid">
-        {currentArtists.map(artist => (
-          <div
-            key={artist.name}
-            className={`artist-card tier-${artist.predictions.predicted_tier || 'unknown'}`}
-            onClick={() => handleArtistClick(artist)}
-          >
-            <div className="artist-header">
-              <h3 className="artist-name">{artist.name}</h3>
-              <span className={`tier-badge ${artist.predictions.predicted_tier || 'unknown'}`}>
-                {artist.predictions.predicted_tier || 'N/A'}
-              </span>
-            </div>
-            
-            <div className="artist-stats">
-              <div className="stat-row">
-                <span className="stat-label">Hit Rate:</span>
-                <span className="stat-value">{artist.hit_rate}%</span>
-              </div>
-              <div className="stat-row">
-                <span className="stat-label">Songs:</span>
-                <span className="stat-value">{artist.total_songs}</span>
-              </div>
-              <div className="stat-row">
-                <span className="stat-label">Revenue:</span>
-                <span className="stat-value">${(artist.estimated_total_revenue / 1000).toFixed(0)}k</span>
-              </div>
-              <div className="stat-row">
-                <span className="stat-label">Genre:</span>
-                <span className="stat-value genre">{artist.primary_genre}</span>
-              </div>
-            </div>
-
-            <div className="prediction-info">
-              <div className="hit-probability">
-                <span>Hit Probability: </span>
-                <strong>{artist.predictions.hit_probability || 0}%</strong>
-              </div>
-              <div className="hotness-score">
-                Hotness: {artist.predictions.hotness_score || 0}/100
-              </div>
-            </div>
+      <div className="artists-table-container">
+        <div className="artists-table">
+          <div className="artists-table-header">
+            <span className="sortable" onClick={() => handleSort('name')}>
+              Artist(s) <SortIndicator columnKey="name" />
+            </span>
+            <span>Genre</span>
+            <span className="sortable" onClick={() => handleSort('total_songs')}>
+              Total Songs <SortIndicator columnKey="total_songs" />
+            </span>
+            <span className="sortable" onClick={() => handleSort('hit_rate')}>
+              Hit Rate <SortIndicator columnKey="hit_rate" />
+            </span>
+            <span className="sortable" onClick={() => handleSort('revenue')}>
+              Revenue <SortIndicator columnKey="revenue" />
+            </span>
+            <span className="sortable" onClick={() => handleSort('predicted_tier')}>
+              Predicted Tier <SortIndicator columnKey="predicted_tier" />
+            </span>
+            <span className="sortable" onClick={() => handleSort('hit_probability')}>
+              Hit Probability <SortIndicator columnKey="hit_probability" />
+            </span>
+            <span className="sortable" onClick={() => handleSort('hotness')}>
+              Hotness <SortIndicator columnKey="hotness" />
+            </span>
           </div>
-        ))}
+          {currentArtists.map(artist => (
+            <div
+              key={artist.name}
+              className={`artists-table-row tier-${artist.predictions.predicted_tier || 'unknown'}`}
+              onClick={() => handleArtistClick(artist)}
+            >
+              <span className="artist-name-cell">{artist.name}</span>
+              <span className="genre-cell">{artist.primary_genre}</span>
+              <span>{artist.total_songs}</span>
+              <span>{artist.hit_rate}%</span>
+              <span>
+                {artist.estimated_total_revenue >= 1000000
+                  ? `$${(artist.estimated_total_revenue / 1000000).toFixed(1)}M`
+                  : `$${(artist.estimated_total_revenue / 1000).toFixed(0)}k`}
+              </span>
+              <span>
+                <span className={`tier-badge ${artist.predictions.predicted_tier || 'unknown'}`}>
+                  {artist.predictions.predicted_tier || 'N/A'}
+                </span>
+              </span>
+              <span>{artist.predictions.hit_probability || 0}%</span>
+              <span>{artist.predictions.hotness_score || 0}/100</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {totalPages > 1 && (
@@ -212,10 +289,25 @@ const ArtistList = () => {
             >
               Previous
             </button>
-            
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = i + 1;
-              return (
+
+            {/* First page */}
+            <button
+              onClick={() => handlePageChange(1)}
+              className={currentPage === 1 ? 'active' : ''}
+            >
+              1
+            </button>
+
+            {/* Show ellipsis if current page is far from start */}
+            {currentPage > 3 && <span className="pagination-ellipsis">...</span>}
+
+            {/* Pages around current page */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(pageNum => {
+                // Show pages around current page (1 before and 1 after)
+                return pageNum > 1 && pageNum < totalPages && Math.abs(pageNum - currentPage) <= 1;
+              })
+              .map(pageNum => (
                 <button
                   key={pageNum}
                   onClick={() => handlePageChange(pageNum)}
@@ -223,8 +315,20 @@ const ArtistList = () => {
                 >
                   {pageNum}
                 </button>
-              );
-            })}
+              ))}
+
+            {/* Show ellipsis if current page is far from end */}
+            {currentPage < totalPages - 2 && <span className="pagination-ellipsis">...</span>}
+
+            {/* Last page */}
+            {totalPages > 1 && (
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className={currentPage === totalPages ? 'active' : ''}
+              >
+                {totalPages}
+              </button>
+            )}
 
             <button
               disabled={currentPage === totalPages}
@@ -244,6 +348,73 @@ const ArtistDetail = () => {
   const navigate = useNavigate();
   const { artistName } = useParams();
   const artist = location.state?.artist;
+  const [songSortConfig, setSongSortConfig] = useState({ key: null, direction: 'asc' });
+
+  // Song sorting handler
+  const handleSongSort = (key) => {
+    let direction = 'asc';
+    if (songSortConfig.key === key && songSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSongSortConfig({ key, direction });
+  };
+
+  // Sort indicator component for songs table
+  const SongSortIndicator = ({ columnKey }) => {
+    if (songSortConfig.key !== columnKey) {
+      return <span className="sort-indicator">⇅</span>;
+    }
+    return <span className="sort-indicator active">{songSortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  // Sorted songs
+  const sortedSongs = useMemo(() => {
+    if (!artist || !artist.songs || artist.songs.length === 0) return [];
+
+    const songs = [...artist.songs];
+
+    if (songSortConfig.key) {
+      songs.sort((a, b) => {
+        let aValue, bValue;
+
+        switch (songSortConfig.key) {
+          case 'title':
+            aValue = (a.title || '').toLowerCase();
+            bValue = (b.title || '').toLowerCase();
+            break;
+          case 'popularity':
+            aValue = a.popularity || 0;
+            bValue = b.popularity || 0;
+            break;
+          case 'tier':
+            const tierOrder = { hit: 4, good: 3, mid: 2, bust: 1 };
+            aValue = tierOrder[a.tier] || 0;
+            bValue = tierOrder[b.tier] || 0;
+            break;
+          case 'revenue':
+            aValue = a.revenue || 0;
+            bValue = b.revenue || 0;
+            break;
+          case 'release_date':
+            aValue = a.release_date ? new Date(a.release_date).getTime() : 0;
+            bValue = b.release_date ? new Date(b.release_date).getTime() : 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) {
+          return songSortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return songSortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return songs;
+  }, [artist, songSortConfig]);
 
   if (!artist) {
     return (
@@ -270,6 +441,53 @@ const ArtistDetail = () => {
           '#8BC34A', // Light green for good
           '#FFC107', // Yellow for mid
           '#F44336'  // Red for bust
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }
+    ]
+  };
+
+  // Calculate revenue split among stakeholders
+  // Based on typical music industry revenue split percentages
+  const calculateRevenueStakeholders = () => {
+    const totalRevenue = artist.estimated_total_revenue || 0;
+
+    // Typical industry split (approximate percentages)
+    const splits = {
+      artist: totalRevenue * 0.15,           // Artist gets ~15%
+      label: totalRevenue * 0.45,            // Record label gets ~45%
+      producers: totalRevenue * 0.12,        // Producers get ~12%
+      distributors: totalRevenue * 0.08,     // Physical/Digital distributors get ~8%
+      streaming: totalRevenue * 0.10,        // Streaming platforms get ~10%
+      other: totalRevenue * 0.10             // Other (marketing, management, etc.) ~10%
+    };
+
+    return splits;
+  };
+
+  const revenueStakeholders = calculateRevenueStakeholders();
+
+  // Revenue stakeholder distribution pie chart data
+  const stakeholderDistributionData = {
+    labels: ['Record Label', 'Artist', 'Producers', 'Streaming Platforms', 'Distributors', 'Other (Marketing/Mgmt)'],
+    datasets: [
+      {
+        data: [
+          revenueStakeholders.label,
+          revenueStakeholders.artist,
+          revenueStakeholders.producers,
+          revenueStakeholders.streaming,
+          revenueStakeholders.distributors,
+          revenueStakeholders.other
+        ],
+        backgroundColor: [
+          '#667eea', // Purple for label
+          '#4CAF50', // Green for artist
+          '#FFC107', // Yellow for producers
+          '#E91E63', // Pink for streaming
+          '#00BCD4', // Cyan for distributors
+          '#9E9E9E'  // Grey for other
         ],
         borderWidth: 2,
         borderColor: '#fff'
@@ -334,7 +552,11 @@ const ArtistDetail = () => {
               <div className="stat-label">Hit Rate</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">${(artist.estimated_total_revenue / 1000).toFixed(0)}k</div>
+              <div className="stat-value">
+                {artist.estimated_total_revenue >= 1000000
+                  ? `$${(artist.estimated_total_revenue / 1000000).toFixed(1)}M`
+                  : `$${(artist.estimated_total_revenue / 1000).toFixed(0)}k`}
+              </div>
               <div className="stat-label">Total Revenue</div>
             </div>
             <div className="stat-card">
@@ -382,6 +604,111 @@ const ArtistDetail = () => {
                 options={chartOptions}
                 height={250}
               />
+            </div>
+          </div>
+
+          <div className="info-card">
+            <h2>Revenue Distribution - Stakeholder Split</h2>
+            <p className="chart-subtitle">Estimated revenue breakdown based on industry standards</p>
+            <div className="chart-container">
+              <Doughnut
+                data={stakeholderDistributionData}
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          const label = context.label || '';
+                          const value = context.parsed || 0;
+                          const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                          const percentage = ((value / total) * 100).toFixed(1);
+                          const formattedValue = value >= 1000000
+                            ? `$${(value / 1000000).toFixed(2)}M`
+                            : `$${(value / 1000).toFixed(0)}k`;
+                          return `${label}: ${formattedValue} (${percentage}%)`;
+                        }
+                      }
+                    }
+                  }
+                }}
+                height={250}
+              />
+            </div>
+            <div className="revenue-breakdown">
+              <div className="revenue-item stakeholder-label">
+                <span className="revenue-label">
+                  <span className="color-indicator" style={{backgroundColor: '#667eea'}}></span>
+                  Record Label:
+                </span>
+                <span className="revenue-value">
+                  ${revenueStakeholders.label >= 1000000
+                    ? `${(revenueStakeholders.label / 1000000).toFixed(2)}M`
+                    : `${(revenueStakeholders.label / 1000).toFixed(0)}k`}
+                  {' '}(45%)
+                </span>
+              </div>
+              <div className="revenue-item stakeholder-artist">
+                <span className="revenue-label">
+                  <span className="color-indicator" style={{backgroundColor: '#4CAF50'}}></span>
+                  Artist:
+                </span>
+                <span className="revenue-value">
+                  ${revenueStakeholders.artist >= 1000000
+                    ? `${(revenueStakeholders.artist / 1000000).toFixed(2)}M`
+                    : `${(revenueStakeholders.artist / 1000).toFixed(0)}k`}
+                  {' '}(15%)
+                </span>
+              </div>
+              <div className="revenue-item stakeholder-producers">
+                <span className="revenue-label">
+                  <span className="color-indicator" style={{backgroundColor: '#FFC107'}}></span>
+                  Producers:
+                </span>
+                <span className="revenue-value">
+                  ${revenueStakeholders.producers >= 1000000
+                    ? `${(revenueStakeholders.producers / 1000000).toFixed(2)}M`
+                    : `${(revenueStakeholders.producers / 1000).toFixed(0)}k`}
+                  {' '}(12%)
+                </span>
+              </div>
+              <div className="revenue-item stakeholder-streaming">
+                <span className="revenue-label">
+                  <span className="color-indicator" style={{backgroundColor: '#E91E63'}}></span>
+                  Streaming Platforms:
+                </span>
+                <span className="revenue-value">
+                  ${revenueStakeholders.streaming >= 1000000
+                    ? `${(revenueStakeholders.streaming / 1000000).toFixed(2)}M`
+                    : `${(revenueStakeholders.streaming / 1000).toFixed(0)}k`}
+                  {' '}(10%)
+                </span>
+              </div>
+              <div className="revenue-item stakeholder-distributors">
+                <span className="revenue-label">
+                  <span className="color-indicator" style={{backgroundColor: '#00BCD4'}}></span>
+                  Distributors:
+                </span>
+                <span className="revenue-value">
+                  ${revenueStakeholders.distributors >= 1000000
+                    ? `${(revenueStakeholders.distributors / 1000000).toFixed(2)}M`
+                    : `${(revenueStakeholders.distributors / 1000).toFixed(0)}k`}
+                  {' '}(8%)
+                </span>
+              </div>
+              <div className="revenue-item stakeholder-other">
+                <span className="revenue-label">
+                  <span className="color-indicator" style={{backgroundColor: '#9E9E9E'}}></span>
+                  Other (Marketing/Mgmt):
+                </span>
+                <span className="revenue-value">
+                  ${revenueStakeholders.other >= 1000000
+                    ? `${(revenueStakeholders.other / 1000000).toFixed(2)}M`
+                    : `${(revenueStakeholders.other / 1000).toFixed(0)}k`}
+                  {' '}(10%)
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -434,13 +761,23 @@ const ArtistDetail = () => {
           <h2>Song Catalog ({artist.songs.length} songs)</h2>
           <div className="songs-table">
             <div className="table-header">
-              <span>Title</span>
-              <span>Popularity</span>
-              <span>Tier</span>
-              <span>Revenue</span>
-              <span>Release Date</span>
+              <span className="sortable" onClick={() => handleSongSort('title')}>
+                Title <SongSortIndicator columnKey="title" />
+              </span>
+              <span className="sortable" onClick={() => handleSongSort('popularity')}>
+                Popularity <SongSortIndicator columnKey="popularity" />
+              </span>
+              <span className="sortable" onClick={() => handleSongSort('tier')}>
+                Tier <SongSortIndicator columnKey="tier" />
+              </span>
+              <span className="sortable" onClick={() => handleSongSort('revenue')}>
+                Revenue <SongSortIndicator columnKey="revenue" />
+              </span>
+              <span className="sortable" onClick={() => handleSongSort('release_date')}>
+                Release Date <SongSortIndicator columnKey="release_date" />
+              </span>
             </div>
-            {artist.songs.map((song, index) => (
+            {sortedSongs.map((song, index) => (
               <div key={index} className={`table-row tier-${song.tier}`}>
                 <span className="song-title">{song.title}</span>
                 <span>{song.popularity}</span>
