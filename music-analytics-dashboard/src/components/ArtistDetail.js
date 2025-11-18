@@ -1,6 +1,7 @@
 // components/ArtistDetail.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { getArtistInfoCached } from '../services/spotifyApi';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,6 +33,30 @@ const ArtistDetail = () => {
   const navigate = useNavigate();
   const { artistName } = useParams();
   const artist = location.state?.artist;
+
+  // State for Spotify artist info (image, followers, etc.)
+  const [spotifyInfo, setSpotifyInfo] = useState({
+    image: null,
+    followers: 'N/A',
+    popularity: 'N/A',
+    genres: 'N/A',
+    spotifyUrl: null
+  });
+  const [loadingSpotifyInfo, setLoadingSpotifyInfo] = useState(true);
+
+  // Fetch Spotify artist info on mount
+  useEffect(() => {
+    const fetchArtistInfo = async () => {
+      if (artist?.name) {
+        setLoadingSpotifyInfo(true);
+        const info = await getArtistInfoCached(artist.name);
+        setSpotifyInfo(info);
+        setLoadingSpotifyInfo(false);
+      }
+    };
+
+    fetchArtistInfo();
+  }, [artist?.name]);
 
   if (!artist) {
     return (
@@ -123,15 +148,66 @@ const ArtistDetail = () => {
 
       {/* Artist Header */}
       <div className="artist-header">
+        {/* Artist Image */}
+        <div className="artist-image-container">
+          {loadingSpotifyInfo ? (
+            <div className="artist-image-placeholder loading">
+              <div className="spinner"></div>
+            </div>
+          ) : spotifyInfo.image ? (
+            <img
+              src={spotifyInfo.image}
+              alt={artist.name}
+              className="artist-image"
+            />
+          ) : (
+            <div className="artist-image-placeholder">
+              <span className="placeholder-text">No Image</span>
+            </div>
+          )}
+        </div>
+
+        {/* Artist Basic Info */}
         <div className="artist-basic-info">
           <h1>{artist.name}</h1>
+
+          {/* Spotify Link */}
+          {spotifyInfo.spotifyUrl && (
+            <a
+              href={spotifyInfo.spotifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="spotify-link"
+            >
+              🎵 View on Spotify
+            </a>
+          )}
+
+          {/* Genre and Tier Tags */}
           <div className="genre-tags">
             <span className="genre-tag">{artist.primary_genre}</span>
             <span className={`tier-badge large ${artist.predictions.predicted_tier || 'unknown'}`}>
               Predicted: {artist.predictions.predicted_tier || 'N/A'}
             </span>
           </div>
-          
+
+          {/* Spotify Info Grid */}
+          <div className="spotify-info-grid">
+            <div className="spotify-info-item">
+              <span className="info-label">Spotify Followers</span>
+              <span className="info-value">{spotifyInfo.followers}</span>
+            </div>
+            <div className="spotify-info-item">
+              <span className="info-label">Spotify Popularity</span>
+              <span className="info-value">{spotifyInfo.popularity}</span>
+            </div>
+            <div className="spotify-info-item full-width">
+              <span className="info-label">Spotify Genres</span>
+              <span className="info-value">{spotifyInfo.genres}</span>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-value">{artist.total_songs}</div>

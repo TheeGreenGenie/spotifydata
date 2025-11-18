@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import './App.css';
+import { getArtistInfoCached } from './services/spotifyApi';
 
 ChartJS.register(
   CategoryScale,
@@ -350,6 +351,35 @@ const ArtistDetail = () => {
   const artist = location.state?.artist;
   const [songSortConfig, setSongSortConfig] = useState({ key: null, direction: 'asc' });
 
+  // Spotify integration
+  const [spotifyInfo, setSpotifyInfo] = useState({
+    image: null,
+    followers: 'N/A',
+    popularity: 'N/A',
+    genres: 'N/A',
+    spotifyUrl: null
+  });
+  const [loadingSpotifyInfo, setLoadingSpotifyInfo] = useState(true);
+
+  // Fetch Spotify artist info
+  useEffect(() => {
+    const fetchSpotifyInfo = async () => {
+      if (!artist || !artist.name) return;
+
+      setLoadingSpotifyInfo(true);
+      try {
+        const info = await getArtistInfoCached(artist.name);
+        setSpotifyInfo(info);
+      } catch (error) {
+        console.error('Error fetching Spotify info:', error);
+      } finally {
+        setLoadingSpotifyInfo(false);
+      }
+    };
+
+    fetchSpotifyInfo();
+  }, [artist]);
+
   // Song sorting handler
   const handleSongSort = (key) => {
     let direction = 'asc';
@@ -530,6 +560,53 @@ const ArtistDetail = () => {
       <button className="back-button" onClick={() => navigate('/')}>
         ← Back to Artists
       </button>
+
+      {/* Spotify Info Section - Separate Container */}
+      <div className="spotify-section">
+        <div className="artist-image-container">
+          {loadingSpotifyInfo ? (
+            <div className="artist-image-placeholder loading">
+              <div className="spinner"></div>
+            </div>
+          ) : spotifyInfo.image ? (
+            <img src={spotifyInfo.image} alt={artist.name} className="artist-image" />
+          ) : (
+            <div className="artist-image-placeholder">
+              <span className="placeholder-text">No Image</span>
+            </div>
+          )}
+        </div>
+
+        <div className="spotify-details">
+          <h2>Spotify Information</h2>
+
+          {spotifyInfo.spotifyUrl && (
+            <a
+              href={spotifyInfo.spotifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="spotify-link"
+            >
+              View on Spotify
+            </a>
+          )}
+
+          <div className="spotify-info-grid">
+            <div className="spotify-info-item">
+              <span className="info-label">Spotify Followers</span>
+              <span className="info-value">{spotifyInfo.followers}</span>
+            </div>
+            <div className="spotify-info-item">
+              <span className="info-label">Spotify Popularity</span>
+              <span className="info-value">{spotifyInfo.popularity}</span>
+            </div>
+            <div className="spotify-info-item full-width">
+              <span className="info-label">Spotify Genres</span>
+              <span className="info-value">{spotifyInfo.genres}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Artist Header */}
       <div className="artist-header">
