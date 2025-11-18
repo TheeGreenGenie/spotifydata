@@ -564,50 +564,9 @@ const ArtistDetail = () => {
               <div className="stat-label">Career Span</div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="detail-grid">
-        {/* Left Column - Current Performance */}
-        <div className="detail-column">
-          <div className="info-card">
-            <h2>Current Performance</h2>
-            <div className="performance-stats">
-              <div className="performance-row">
-                <span>Hit Songs:</span>
-                <span>{artist.hit_songs} ({artist.hit_rate}%)</span>
-              </div>
-              <div className="performance-row">
-                <span>Good Songs:</span>
-                <span>{artist.good_songs} ({artist.good_rate}%)</span>
-              </div>
-              <div className="performance-row">
-                <span>Mid Songs:</span>
-                <span>{artist.mid_songs} ({artist.mid_rate}%)</span>
-              </div>
-              <div className="performance-row">
-                <span>Bust Songs:</span>
-                <span>{artist.bust_songs} ({artist.bust_rate}%)</span>
-              </div>
-              <div className="performance-row">
-                <span>Explicit Ratio:</span>
-                <span>{artist.explicit_ratio}%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="info-card">
-            <h2>Song Tier Distribution</h2>
-            <div className="chart-container">
-              <Doughnut
-                data={tierData}
-                options={chartOptions}
-                height={250}
-              />
-            </div>
-          </div>
-
-          <div className="info-card">
+          {/* Revenue Distribution - Moved inside artist header */}
+          <div className="revenue-distribution-section">
             <h2>Revenue Distribution - Stakeholder Split</h2>
             <p className="chart-subtitle">Estimated revenue breakdown based on industry standards</p>
             <div className="chart-container">
@@ -709,6 +668,48 @@ const ArtistDetail = () => {
                   {' '}(10%)
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="detail-grid">
+        {/* Left Column - Current Performance */}
+        <div className="detail-column">
+          <div className="info-card">
+            <h2>Current Performance</h2>
+            <div className="performance-stats">
+              <div className="performance-row">
+                <span>Hit Songs:</span>
+                <span>{artist.hit_songs} ({artist.hit_rate}%)</span>
+              </div>
+              <div className="performance-row">
+                <span>Good Songs:</span>
+                <span>{artist.good_songs} ({artist.good_rate}%)</span>
+              </div>
+              <div className="performance-row">
+                <span>Mid Songs:</span>
+                <span>{artist.mid_songs} ({artist.mid_rate}%)</span>
+              </div>
+              <div className="performance-row">
+                <span>Bust Songs:</span>
+                <span>{artist.bust_songs} ({artist.bust_rate}%)</span>
+              </div>
+              <div className="performance-row">
+                <span>Explicit Ratio:</span>
+                <span>{artist.explicit_ratio}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="info-card">
+            <h2>Song Tier Distribution</h2>
+            <div className="chart-container">
+              <Doughnut
+                data={tierData}
+                options={chartOptions}
+                height={250}
+              />
             </div>
           </div>
         </div>

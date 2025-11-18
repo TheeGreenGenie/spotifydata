@@ -23,8 +23,8 @@ const ArtistList = () => {
       try {
         // Load both JSON files
         const [artistsResponse, predictionsResponse] = await Promise.all([
-          fetch('/data/artists-data.json'),
-          fetch('/data/predictions-data.json')
+          fetch('music-analytics-dashboard/public/data/artists-data.json'),
+          fetch('music-anazlytics-dashboard/public/data/predictions-data.json')
         ]);
         
         const artistsJson = await artistsResponse.json();
