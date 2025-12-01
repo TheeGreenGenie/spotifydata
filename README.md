@@ -53,24 +53,24 @@ This project was developed to analyze a large Spotify dataset containing detaile
 Our dashboard successfully analyzed **99,594 artists** from the dataset, providing comprehensive insights and predictions:
 
 #### Main Dashboard - Artist List View
-![Artist List Overview](Screenshot%202025-11-30%20155932.png)
+![Artist List Overview](WorkingAppImages/Screenshot%202025-11-30%20155932.png)
 *The main artist list showing thousands of artists with sortable columns including genre, total songs, hit rate, revenue, predicted tier, hit probability, and hotness score.*
 
 #### Sorting and Filtering
-![Sorted by Total Songs](Screenshot%202025-11-30%20160002.png)
+![Sorted by Total Songs](WorkingAppImages/Screenshot%202025-11-30%20160002.png)
 *Artists sorted by total songs - showing prolific artists like L.A.B. (1,435 songs), Gucci Mane (1,029 songs), and Lil Wayne (876 songs).*
 
-![Top Performers by Revenue](Screenshot%202025-11-30%20160027.png)
+![Top Performers by Revenue](WorkingAppImages/Screenshot%202025-11-30%20160027.png)
 *High-performing artists sorted by revenue with GOOD predictions - including Frank Ocean (60.78% hit rate), Billie Eilish (60.78% hit rate), and Kendrick Lamar (29.56% hit rate).*
 
-![Sorted by Hit Probability](Screenshot%202025-11-30%20160047.png)
+![Sorted by Hit Probability](WorkingAppImages/Screenshot%202025-11-30%20160047.png)
 *Artists sorted by next hit probability - showing predictions ranging from 30% to 95%, with artists like Ariana Grande, SZA, and Sabrina Carpenter all predicted at 95% probability.*
 
 #### Artist Detail Pages
-![Artist Detail - Billie Eilish Spotify Info](Screenshot%202025-11-30%20160120.png)
+![Artist Detail - Billie Eilish Spotify Info](WorkingAppImages/Screenshot%202025-11-30%20160120.png)
 *Individual artist page showing Spotify integration with real-time data - Billie Eilish has 119M+ followers and 92 popularity score.*
 
-![Artist Detail - Billie Eilish Analytics](Screenshot%202025-11-30%20160148.png)
+![Artist Detail - Billie Eilish Analytics](WorkingAppImages/Screenshot%202025-11-30%20160148.png)
 *Detailed analytics for Billie Eilish including:*
 - *102 total songs with 60.78% hit rate*
 - *$851.5M estimated total revenue*
@@ -78,7 +78,7 @@ Our dashboard successfully analyzed **99,594 artists** from the dataset, providi
 - *Revenue distribution breakdown across stakeholders*
 - *Song tier distribution (Hit/Good/Mid/Bust)*
 
-![Artist Detail - Predictions & Song Catalog](Screenshot%202025-11-30%20160158.png)
+![Artist Detail - Predictions & Song Catalog](WorkingAppImages/Screenshot%202025-11-30%20160158.png)
 *ML predictions and audio features visualization:*
 - *95% hit probability for next release*
 - *Predicted popularity: 96*
@@ -87,7 +87,7 @@ Our dashboard successfully analyzed **99,594 artists** from the dataset, providi
 - *Audio features bar chart showing energy, danceability, etc.*
 - *Complete song catalog with popularity tiers and revenue estimates*
 
-![Song Catalog Detail](Screenshot%202025-11-30%20160206.png)
+![Song Catalog Detail](WorkingAppImages/Screenshot%202025-11-30%20160206.png)
 *Individual song breakdowns showing titles, popularity scores, tier classifications (Hit/Good/Mid), revenue estimates, and release dates.*
 
 ## Project Structure
